@@ -10,6 +10,7 @@ const authRoutes = require('./src/routes/auth.routes');
 
 // Initialize Express app
 const app = express();
+app.set('trust proxy', 1); // <-- ADD THIS LINE
 const PORT = process.env.PORT || 5000;
 
 // ===== SECURITY MIDDLEWARE =====
