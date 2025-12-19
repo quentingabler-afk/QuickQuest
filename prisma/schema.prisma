@@ -1,0 +1,105 @@
+// Prisma Schema for QuickQuest
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// USER MODEL
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String?  // Optional for OAuth users
+  
+  // Profile
+  firstName String?
+  lastName  String?
+  avatar    String?
+  bio       String?
+  
+  // OAuth Providers
+  googleId  String?  @unique
+  githubId  String?  @unique
+  provider  String?  // "local", "google", "github"
+  
+  // Status
+  isVerified Boolean @default(false)
+  isPro      Boolean @default(false)
+  
+  // Email Verification
+  verificationToken String?
+  verificationTokenExpires DateTime?
+  
+  // Password Reset
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations (ready for future implementation)
+  // tasksPosted Task[] @relation("TaskPoster")
+  // tasksWorking Task[] @relation("TaskWorker")
+  // transactions Transaction[]
+  // notifications Notification[]
+  // messages Message[]
+  // reviews Review[]
+  
+  @@map("users")
+}
+
+// Future models (commented out for now - will be added in Sprint 2)
+
+// model Task {
+//   id          String   @id @default(uuid())
+//   title       String
+//   description String
+//   category    String
+//   budget      Float
+//   deadline    DateTime
+//   status      String   @default("open") // open, in_progress, submitted, completed, disputed
+//   
+//   posterId    String
+//   poster      User     @relation("TaskPoster", fields: [posterId], references: [id])
+//   
+//   workerId    String?
+//   worker      User?    @relation("TaskWorker", fields: [workerId], references: [id])
+//   
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+//   
+//   @@map("tasks")
+// }
+
+// model Escrow {
+//   id          String   @id @default(uuid())
+//   taskId      String   @unique
+//   amount      Float
+//   status      String   @default("held") // held, released, refunded
+//   
+//   chargedAt   DateTime @default(now())
+//   releasedAt  DateTime?
+//   
+//   @@map("escrows")
+// }
+
+// model Transaction {
+//   id          String   @id @default(uuid())
+//   userId      String
+//   user        User     @relation(fields: [userId], references: [id])
+//   
+//   type        String   // payment, payout, fee, refund
+//   amount      Float
+//   description String
+//   
+//   createdAt   DateTime @default(now())
+//   
+//   @@map("transactions")
+// }
