@@ -10,7 +10,10 @@ const authRoutes = require('./src/routes/auth.routes');
 
 // Initialize Express app
 const app = express();
-app.set('trust proxy', 1); // <-- ADD THIS LINE
+
+// ===== TRUST PROXY - MUST BE FIRST! =====
+app.set('trust proxy', 1);  // ← Move this to the TOP, right after app initialization
+
 const PORT = process.env.PORT || 5000;
 
 // ===== SECURITY MIDDLEWARE =====
@@ -29,16 +32,16 @@ app.use(passport.initialize());
 
 // Rate limiting - Prevent brute force attacks
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
 
 // Stricter rate limit for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login/register attempts per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 100, // Increased for testing
   message: 'Too many authentication attempts, please try again later.',
 });
 
