@@ -26,7 +26,6 @@ exports.register = async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
-    // Validation
     if (!email || !username || !password) {
       return res.status(400).json({
         success: false,
@@ -34,7 +33,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -53,14 +51,11 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -72,12 +67,10 @@ exports.register = async (req, res) => {
       }
     });
 
-    // Send verification email (non-blocking)
     sendVerificationEmail(email, verificationToken).catch(err => {
       console.error('Failed to send verification email:', err);
     });
 
-    // Generate JWT
     const token = generateToken(user.id, user.email);
 
     res.status(201).json({
@@ -102,7 +95,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -110,7 +102,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -122,7 +113,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if user registered with OAuth
     if (!user.password) {
       return res.status(401).json({
         success: false,
@@ -130,7 +120,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
@@ -140,7 +129,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT
     const token = generateToken(user.id, user.email);
 
     res.status(200).json({
@@ -172,20 +160,17 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
     if (!user) {
-      // Don't reveal if email exists
       return res.status(200).json({
         success: true,
         message: 'If an account exists with this email, you will receive a password reset link.'
       });
     }
 
-    // Check if user registered with OAuth
     if (!user.password) {
       return res.status(400).json({
         success: false,
@@ -193,11 +178,9 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+    const resetTokenExpires = new Date(Date.now() + 1 * 60 * 60 * 1000);
 
-    // Save reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -206,7 +189,6 @@ exports.forgotPassword = async (req, res) => {
       }
     });
 
-    // Send reset email (non-blocking)
     sendPasswordResetEmail(email, resetToken).catch(err => {
       console.error('Failed to send reset email:', err);
     });
@@ -236,7 +218,6 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // Find user with valid reset token
     const user = await prisma.user.findFirst({
       where: {
         resetPasswordToken: token,
@@ -253,10 +234,8 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update password and clear reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
